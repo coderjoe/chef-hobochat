@@ -1,0 +1,325 @@
+/* IMPORTANT NOTES:
+ *
+ * class {} blocks MUST be specified before anything that uses them.  That
+ * means they must be defined before auth {} and before connect {}.
+ *
+ * auth {} blocks MUST be specified in order of precedence.  The first one
+ * that matches a user will be used.  So place spoofs first, then specials,
+ * then general access, then restricted.
+ *
+ * Both shell style (#) and C style comments are supported.
+ *
+ * Files may be included by either:
+ *        .include "filename"
+ *        .include <filename>
+ *
+ * Times/durations are written as:
+ *        12 hours 30 minutes 1 second
+ *        
+ * Valid units of time:
+ *        month, week, day, hour, minute, second
+ *
+ * Valid units of size:
+ *        megabyte/mbyte/mb, kilobyte/kbyte/kb, byte
+ *
+ * Sizes and times may be singular or plural.  
+ */ 
+
+/* EFNET NOTE:
+ * 
+ * This config file is NOT suitable for EFNet.  EFNet admins should use
+ * example.efnet.conf
+ */
+
+ /* serverinfo {}:  Contains information about the server. (OLD M:) */
+serverinfo {
+	/* name: the name of our server */
+	name = "hobochat.irc";
+	sid = "42X";
+	description = "Hobochat IRC server";
+	network_name = "Hobonet";
+	network_desc = "Your friendly neighborhood boxcar.";
+	hub = no;
+
+	default_max_clients = 10000;
+
+	ssl_private_key = "etc/test.key";
+	ssl_cert = "etc/test.cert";
+	ssl_dh_params = "etc/dh.pem";
+	ssld_count = 1;
+
+	bandb = "etc/ban.db";
+};
+
+/* admin {}: contains admin information about the server. (OLD A:) */
+admin {
+	name = "Mr Admin Sir";
+	description = "Main Server Administrator";
+	email = "<syn@packets.r.us>";
+};
+
+/* log {}: contains information about logfiles. */
+log {
+	/* logfiles: the logfiles to use for specific activity.  if these
+	 * paths are defined, then ircd will log to them, otherwise it wont.
+	 *
+	 * The confs are, in order:
+	 * - userlog:    user exits
+	 * - fuserlog:   failed user connections
+	 * - operlog:    /oper usage
+	 * - foperlog:   failed /oper usage
+	 * - serverlog:  server connects/disconnects
+	 * - glinelog:   glines
+	 * - klinelog:   klines, etc
+	 * - killlog:    kills
+	 * - operspylog: operspy usage
+	 * - ioerrorlog: IO errors
+	 */
+	fname_userlog = "logs/userlog";
+	#fname_fuserlog = "logs/fuserlog";
+	fname_operlog = "logs/operlog";
+	#fname_foperlog = "logs/foperlog";
+	fname_serverlog = "logs/serverlog";
+	fname_glinelog = "logs/glinelog";
+	#fname_klinelog = "logs/klinelog";
+	fname_killlog = "logs/killlog";
+	fname_operspylog = "logs/operspylog";
+	#fname_ioerrorlog = "logs/ioerror";
+};
+
+/* class {}: contain information about classes for users (OLD Y:) */
+class "users" {
+	ping_time = 2 minutes;
+
+	number_per_ident = 2;
+	number_per_ip = 3;
+	number_per_ip_global = 5;
+	cidr_ipv4_bitlen = 24;
+	cidr_ipv6_bitlen = 64;
+	number_per_cidr = 4;
+	max_number = 1000;
+	sendq = 100 kbytes;
+};
+
+class "restricted" {
+	ping_time = 1 minute 30 seconds;
+	number_per_ip = 1;
+	max_number = 100;
+	sendq = 60kb;
+};
+
+class "opers" {
+	ping_time = 5 minutes;
+	number_per_ip = 10;
+	max_number = 100;
+	sendq = 100kbytes;
+};
+
+class "server" {
+	ping_time = 5 minutes;
+	connectfreq = 5 minutes;
+	max_number = 1;
+	sendq=2 megabytes;
+};
+
+/* listen {}: contain information about the ports ircd listens on (OLD P:) */
+listen {
+	aftype = ipv4;
+	port = 5000, 5555, 6665 .. 6669;
+
+	aftype = ipv6;
+	port = 7003;
+
+	sslport = 9999;
+};
+
+auth {
+	user = "*@*";
+	class = "users";
+};
+
+/* operator {}: defines ircd operators. (OLD O:)
+ * ircd-ratbox no longer supports local operators, privileges are
+ * controlled via flags.
+ */
+operator "admin" {
+	user = "admin@*";
+  password = "<%= @admin_password -%>";
+	#rsa_public_key_file = "/usr/local/ircd/etc/oper.pub";
+	#umodes = locops, servnotice, operwall, wallop;
+	flags = global_kill, remote, kline, unkline, gline,
+	        die, rehash, admin, xline, resv, operwall, ~encrypted;
+};
+
+/* connect {}: controls servers we connect to (OLD C:, N:, H:, L:) */
+connect "ratbox.services" {
+	host = "127.0.0.1";
+  send_password = "<%= @services_password -%>";
+  accept_password = "<%= @services_password -%>";
+	hub_mask = "*";
+	class = "server";
+	flags = compressed, topicburst;
+};
+
+/* If you are using the ratbox-services compatibility code, uncomment this. */
+/* service{}: privileged servers (services). These servers have extra
+ * privileges such as setting login names on users and introducing clients
+ * with umode +S (unkickable). This does not allow them to set bans, you
+ * need a separate shared{} for that.
+ * Do not place normal servers here.
+ * There may be only one service{} block.
+ */
+service {
+	/* name: the server name. These may be stacked. */
+	name = "ratbox.services";
+};
+
+shared {
+	oper = "*@services.int", "*@ratbox-services";
+	flags = all;
+};
+
+/* exempt {}: IPs that are exempt from deny {} and Dlines. (OLD d:) */
+exempt {
+	ip = "127.0.0.1";
+};
+
+/* The channel block contains options pertaining to channels */
+channel {
+	use_invex = yes;
+	use_except = yes;
+	use_knock = yes;
+	invite_ops_only = yes;
+	knock_delay = 5 minutes;
+	knock_delay_channel = 1 minute;
+	max_chans_per_user = 25;
+	quiet_on_ban = yes;
+	max_bans = 25;
+
+	default_split_user_count = 0;
+	default_split_server_count = 0;
+	no_create_on_split = no;
+	no_join_on_split = no;
+
+	burst_topicwho = yes;
+	use_sslonly = no;
+
+	/* topiclen: length of topics */
+	topiclen = 160;
+};
+
+/* The serverhide block contains the options regarding serverhiding */
+serverhide {
+	flatten_links = no;
+	links_delay = 5 minutes;
+	hidden = no;
+	disable_hidden = yes;
+};
+
+/* The general block contains many of the options that were once compiled
+ * in options in config.h.  The general block is read at start time.
+ */
+general {
+	hide_error_messages = opers;
+	hide_spoof_ips = yes;
+	default_invisible = no;
+	default_operstring = "is an IRC Operator";
+	default_adminstring = "is a Server Administrator";
+
+	disable_fake_channels = no;
+	tkline_expire_notices = no;
+	default_floodcount = 50;
+	failed_oper_notice = yes;
+	dots_in_ident=2;
+	dot_in_ip6_addr = no;
+
+	min_nonwildcard = 4;
+	min_nonwildcard_simple = 3;
+
+	max_accept = 20;
+	max_monitor = 100;
+
+	anti_nick_flood = yes;
+	max_nick_time = 20 seconds;
+	max_nick_changes = 5;
+
+	anti_spam_exit_message_time = 5 minutes;
+
+	ts_warn_delta = 30 seconds;
+	ts_max_delta = 5 minutes;
+
+	client_exit = yes;
+	collision_fnc = no;
+
+	dline_with_reason = yes;
+
+	kline_delay = 0 seconds;
+	kline_with_reason = yes;
+	kline_reason = "Connection closed";
+
+	non_redundant_klines = yes;
+
+	warn_no_nline = yes;
+
+	stats_e_disabled = no;
+	stats_c_oper_only=no;
+	stats_h_oper_only=no;
+	stats_y_oper_only=no;
+	stats_o_oper_only=yes;
+	stats_P_oper_only=no;
+	stats_i_oper_only=masked;
+	stats_k_oper_only=masked;
+
+	map_oper_only = no;
+	operspy_admin_only = no;
+
+	caller_id_wait = 1 minute;
+
+	pace_wait_simple = 1 second;
+
+	pace_wait = 10 seconds;
+
+	short_motd = no;
+	ping_cookie = no;
+
+	connect_timeout = 30 seconds;
+
+	disable_auth = no;
+
+	no_oper_flood = yes;
+
+	glines = yes;
+	gline_time = 1 day;
+	gline_min_cidr = 16;
+
+	global_cidr_ipv4_bitlen = 24;
+	global_cidr_ipv4_count = 384;
+
+	global_cidr_ipv6_bitlen = 64;
+	global_cidr_ipv6_count = 128;
+	global_cidr = yes;
+
+	max_targets = 4;
+
+	client_flood = 20;
+
+	post_registration_delay = 0 seconds;
+
+	use_whois_actually = yes;
+
+	/* oper only umodes: usermodes only opers may set */
+	oper_only_umodes = bots, cconn, cconnext, debug, full, skill, nchange, 
+	                   rej, spy, external, operwall, locops, unauth;
+
+	/* oper umodes: default usermodes opers get when they /oper */
+	oper_umodes = locops, servnotice, operwall, wallop;
+
+	burst_away = yes;
+
+	reject_duration = 5 minutes;
+
+	reject_after_count = 3;
+
+	throttle_duration = 60;
+	throttle_count = 4;
+};
