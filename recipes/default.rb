@@ -50,3 +50,10 @@ bash command do
   user node[:ircd][:services][:user]
   group node[:ircd][:services][:group]
 end
+
+template '/home/kiwiirc/config.js' do
+  source 'kiwiirc.config.js.erb'
+  owner 'kiwiirc'
+  group 'kiwiirc'
+  mode 0644
+end

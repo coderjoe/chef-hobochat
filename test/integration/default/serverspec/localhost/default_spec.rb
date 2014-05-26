@@ -33,6 +33,7 @@ describe 'hobochat::default' do
       /home/ratbox-services/sbin/ratbox-services
       /home/ratbox-services/etc/ratbox-services.conf
       /home/ratbox-services/etc/ratbox-services.db
+      /home/kiwiirc/config.js
   ).each do |dir|
     describe file(dir) do
       it { should be_file }

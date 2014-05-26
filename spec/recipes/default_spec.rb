@@ -53,4 +53,15 @@ describe 'hobochat::default' do
   it 'should include kiwiirc' do
     expect(chef_run).to include_recipe 'kiwiirc'
   end
+
+  it 'should configure kiwiirc' do
+    expect(chef_run).to create_template(
+      '/home/kiwiirc/config.js'
+    ).with(
+      source: 'kiwiirc.config.js.erb',
+      owner: 'kiwiirc',
+      group: 'kiwiirc',
+      mode: 0644
+    )
+  end
 end
