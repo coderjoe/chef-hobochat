@@ -7,61 +7,19 @@ describe 'hobochat::default' do
     ChefSpec::Runner.new.converge(described_recipe)
   end
 
-  it 'should include ircd-ratbox' do
-    expect(chef_run).to include_recipe 'ircd-ratbox'
+  it 'should include the apt recipe' do
+    expect(chef_run).to include_recipe 'apt'
   end
 
-  it 'should configure ircd-ratbox' do
-    expect(chef_run).to create_template('/home/ratbox/etc/ircd.conf').with(
-      mode: 0644,
-      source: 'ratbox.conf.erb'
-    )
+  it 'should include our ratbox recipe' do
+    expect(chef_run).to include_recipe 'hobochat::ratbox'
   end
 
-  it 'should configure ratbox-services' do
-    expect(chef_run).to create_template(
-      '/home/ratbox-services/etc/ratbox-services.conf'
-    ).with(
-      mode: 0644,
-      source: 'ratbox-services.conf.erb'
-    )
+  it 'should include our kiwiirc recipe' do
+    expect(chef_run).to include_recipe 'hobochat::kiwiirc'
   end
 
-  it 'should generate the ratbox-services schemas' do
-    command = './generate-schema.pl'
-    expect(chef_run).to run_bash(command).with(
-      code: command,
-      cwd: '/home/ratbox-services/src/tools',
-      user: 'ratbox-services',
-      group: 'ratbox-services'
-    )
-  end
-
-  it 'should initialize the ratbox-services database' do
-    prefix = '/home/ratbox-services'
-    db_file = "#{prefix}/etc/ratbox-services.db"
-    schema_file = "#{prefix}/src/tools/schema-sqlite.txt"
-    command = "./sqlite3 #{db_file} < #{schema_file}"
-    expect(chef_run).to run_bash(command).with(
-      code: command,
-      cwd: '/home/ratbox-services/bin',
-      user: 'ratbox-services',
-      group: 'ratbox-services'
-    )
-  end
-
-  it 'should include kiwiirc' do
-    expect(chef_run).to include_recipe 'kiwiirc'
-  end
-
-  it 'should configure kiwiirc' do
-    expect(chef_run).to create_template(
-      '/home/kiwiirc/config.js'
-    ).with(
-      source: 'kiwiirc.config.js.erb',
-      owner: 'kiwiirc',
-      group: 'kiwiirc',
-      mode: 0644
-    )
+  it 'should include our hubot recipe' do
+    expect(chef_run).to include_recipe 'hobochat::hubot'
   end
 end

@@ -2,7 +2,7 @@
 require 'spec_helper'
 
 describe 'hobochat::default' do
-  %w(ratbox ratbox-services).each do |cred|
+  %w(ratbox ratbox-services kiwiirc hubot).each do |cred|
     describe user(cred) do
       it { should exist }
       it { should have_home_directory "/home/#{cred}" }
