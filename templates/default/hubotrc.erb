@@ -1,0 +1,16 @@
+#--------------- HUBOT CONFIG --------------
+
+<% unless @env.nil? or @env.empty? %>
+  <% @env.each do |var,value| %>
+    <% if value.class == String %>
+export <%= var -%>="<%= value -%>"
+    <% elsif value.class == Array %>
+export <%= var -%>="<%= value.join(',') -%>"
+    <% end %>
+	<% end %>
+<% end %>
+
+#-------------------------------------------
+
+npm install
+export PATH="node_modules/.bin:node_modules/hubot/node_modules/.bin:$PATH"
