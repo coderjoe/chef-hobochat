@@ -22,4 +22,8 @@ describe 'hobochat::default' do
   it 'should include our hubot recipe' do
     expect(chef_run).to include_recipe 'hobochat::hubot'
   end
+
+  it 'should include our monit recipe' do
+    expect(chef_run).to include_recipe 'hobochat::monit'
+  end
 end

@@ -1,0 +1,18 @@
+<% unless @watch_files.nil? || @watch_files.empty? %>
+	<% @watch_files.each do |file| %>
+check file <%= file[:name] %> 
+	with path <%= file[:path] %>
+	if changed checksum then restart
+	if changed timestamp then restart
+
+	<% end %>
+<% end %>
+check process <%= @name %> 
+	with pidfile "<%= @pid_file %>"
+	start "<%= @start -%>" as uid <%= @user -%> and gid <%= @group %>
+	stop "<%= @stop -%>" as uid <%= @user -%> and gid <%= @group %>
+<% unless @watch_files.nil? || @watch_files.empty? %>
+	<% @watch_files.each do |file| %>
+	depends on <%= file[:name] %>
+	<% end %>
+<% end %>
